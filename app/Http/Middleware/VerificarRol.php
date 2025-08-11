@@ -31,7 +31,7 @@ class VerificarRol
 
         // Verifica si el usuario tiene al menos uno de los roles requeridos
         // Asegúrate de que 'name' sea el nombre real del campo en tu tabla roles
-        if (!$usuario->roles->pluck('nombre')->intersect($roles)->isNotEmpty()) {
+        if (!$usuario->roles->pluck('name')->intersect($roles)->isNotEmpty()) {
             abort(403, 'Acceso no autorizado.');
         }
 

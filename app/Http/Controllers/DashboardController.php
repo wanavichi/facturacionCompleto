@@ -15,7 +15,7 @@ class DashboardController extends Controller
     public function index()
     {
         $usuario = Auth::user();
-        $roles = $usuario->roles->pluck('nombre');
+        $roles = $usuario->roles->pluck('name');
         $usuarios = User::all(); // Agregar esta línea para la variable usuarios
 
         $totalFacturas = Factura::count();

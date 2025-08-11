@@ -58,10 +58,12 @@
                     <td class="px-6 py-4">
                         @if($factura->anulada)
                             <span class="text-red-600 font-semibold">Anulada</span>
-                        @elseif($factura->estado === 'pagada')
+                        @elseif($factura->pagada)
                             <span class="text-green-600 font-semibold">Pagada</span>
-                        @else
+                        @elseif($factura->estado === 'pendiente')
                             <span class="text-yellow-600 font-semibold">Pendiente</span>
+                        @else
+                            <span class="text-gray-600 font-semibold">{{ ucfirst($factura->estado) }}</span>
                         @endif
                     </td>
                     <td class="px-6 py-4 space-x-4 whitespace-nowrap">
@@ -98,6 +100,102 @@
 
     {{-- Modales --}}
     @foreach($facturas as $factura)
+        {{-- Modal Ver Factura --}}
+        <div id="verFactura-{{ $factura->id }}" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl max-h-[80vh] overflow-y-auto">
+                <h3 class="text-xl font-bold mb-4 text-gray-800">Factura #{{ $factura->id }}</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700 mb-4">
+                    <div>
+                        <p class="mb-1"><strong>Cliente:</strong> {{ $factura->cliente->nombre }}</p>
+                        <p class="mb-1"><strong>Email:</strong> {{ $factura->cliente->email }}</p>
+                        <p class="mb-1"><strong>Fecha:</strong> {{ $factura->created_at->format('d/m/Y H:i') }}</p>
+                    </div>
+                    <div>
+                        <p class="mb-1"><strong>Subtotal:</strong> ${{ number_format($factura->subtotal, 2) }}</p>
+                        <p class="mb-1"><strong>Descuento:</strong> -${{ number_format($factura->descuento, 2) }}</p>
+                        <p class="mb-1"><strong>IVA (12%):</strong> ${{ number_format($factura->iva, 2) }}</p>
+                        <p class="mb-1"><strong>Total:</strong> ${{ number_format($factura->total, 2) }}</p>
+                        <p class="mb-1"><strong>Estado:</strong>
+                            @if($factura->anulada)
+                                <span class="text-red-600 font-semibold">Anulada</span>
+                            @elseif($factura->pagada)
+                                <span class="text-green-600 font-semibold">Pagada</span>
+                            @else
+                                <span class="text-yellow-600 font-semibold">Pendiente</span>
+                            @endif
+                        </p>
+                    </div>
+                </div>
+
+                <h4 class="text-lg font-semibold text-gray-800 mt-4 mb-2">Detalles</h4>
+                @if($factura->detalles && $factura->detalles->count())
+                    <table class="w-full text-sm text-gray-700 mb-4">
+                        <thead class="bg-gray-100 border-b">
+                            <tr>
+                                <th class="px-3 py-2 text-left">Producto</th>
+                                <th class="px-3 py-2 text-right">Cantidad</th>
+                                <th class="px-3 py-2 text-right">Precio</th>
+                                <th class="px-3 py-2 text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($factura->detalles as $d)
+                                <tr class="border-b last:border-none">
+                                    <td class="px-3 py-2">{{ $d->producto->nombre ?? 'N/A' }}</td>
+                                    <td class="px-3 py-2 text-right">{{ $d->cantidad }}</td>
+                                    <td class="px-3 py-2 text-right">${{ number_format($d->precio_unitario, 2) }}</td>
+                                    <td class="px-3 py-2 text-right">${{ number_format($d->subtotal, 2) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <p class="text-gray-500">No hay detalles registrados.</p>
+                @endif
+
+                <div class="mt-4 text-right">
+                    <button onclick="closeModal('verFactura-{{ $factura->id }}')" class="px-5 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition">Cerrar</button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal Anular Factura --}}
+        <div id="anularFactura-{{ $factura->id }}" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+                <h3 class="text-xl font-bold mb-4 text-gray-800">Confirmar anulación</h3>
+                <p class="text-gray-700 mb-6">¿Seguro que deseas anular la factura #{{ $factura->id }}? Esta acción no se puede deshacer.</p>
+                <div class="flex justify-end gap-3">
+                    <button onclick="closeModal('anularFactura-{{ $factura->id }}')" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded">Cancelar</button>
+                    <form action="{{ route('facturas.anular', $factura) }}" method="POST">
+                        @csrf
+                        <button class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded">Anular</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal Notificar Factura --}}
+        <div id="notificarFactura-{{ $factura->id }}" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+                <h3 class="text-xl font-bold mb-4 text-gray-800">Enviar notificación</h3>
+                @if($factura->cliente->email_verified_at)
+                    <p class="text-gray-700 mb-6">Se enviará la factura #{{ $factura->id }} al correo del cliente: <strong>{{ $factura->cliente->email }}</strong>.</p>
+                    <div class="flex justify-end gap-3">
+                        <button onclick="closeModal('notificarFactura-{{ $factura->id }}')" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded">Cancelar</button>
+                        <form action="{{ route('facturas.notificar', $factura) }}" method="POST">
+                            @csrf
+                            <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Enviar</button>
+                        </form>
+                    </div>
+                @else
+                    <p class="text-gray-600">El cliente no tiene su correo verificado, no es posible enviar notificación.</p>
+                    <div class="mt-6 text-right">
+                        <button onclick="closeModal('notificarFactura-{{ $factura->id }}')" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded">Cerrar</button>
+                    </div>
+                @endif
+            </div>
+        </div>
+
         {{-- Modal de pagos --}}
         <div id="pagosFactura-{{ $factura->id }}" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
             <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -127,7 +225,7 @@
                                         @endif
                                     </td>
                                     <td class="px-3 py-2">
-                                        @role('pagos')
+                                        @if($roles->contains('Pagos'))
                                             @if($pago->estado === 'pendiente')
                                                 <form action="{{ route('pagos.approve', $pago->id) }}" method="POST" class="inline">@csrf
                                                     <button class="text-green-600 hover:text-green-800">Aprobar</button>
@@ -136,7 +234,7 @@
                                                     <button class="text-red-600 hover:text-red-800">Rechazar</button>
                                                 </form>
                                             @endif
-                                        @endrole
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

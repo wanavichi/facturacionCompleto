@@ -139,7 +139,7 @@
       Inicio
     </a>
 
-    @if(Auth::user()->roles->contains('nombre', 'Administrador'))
+    @if(Auth::user()->roles->contains('name', 'Administrador'))
     <a
       href="{{ route('usuarios.index') }}"
       class="sidebar-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}"
@@ -161,7 +161,7 @@
     </a>
     @endif
 
-    @if(Auth::user()->roles->contains('nombre', 'Administrador') || Auth::user()->roles->contains('nombre', 'Secretario'))
+    @if(Auth::user()->roles->contains('name', 'Administrador') || Auth::user()->roles->contains('name', 'Secretario'))
     <a
       href="{{ route('clientes.index') }}"
       class="sidebar-link {{ request()->routeIs('clientes.*') ? 'active' : '' }}"
@@ -184,7 +184,7 @@
     </a>
     @endif
 
-    @if(Auth::user()->roles->contains('nombre', 'Administrador') || Auth::user()->roles->contains('nombre', 'Bodega'))
+    @if(Auth::user()->roles->contains('name', 'Administrador') || Auth::user()->roles->contains('name', 'Bodega'))
     <a
       href="{{ route('productos.index') }}"
       class="sidebar-link {{ request()->routeIs('productos.*') ? 'active' : '' }}"
@@ -208,7 +208,7 @@
     </a>
     @endif
 
-    @if(Auth::user()->roles->contains('nombre', 'Administrador') || Auth::user()->roles->contains('nombre', 'Ventas'))
+    @if(Auth::user()->roles->contains('name', 'Administrador') || Auth::user()->roles->contains('name', 'Ventas'))
     <a
       href="{{ route('facturas.index') }}"
       class="sidebar-link {{ request()->routeIs('facturas.*') ? 'active' : '' }}"
@@ -232,7 +232,30 @@
     </a>
     @endif
 
-    @if(Auth::user()->roles->contains('nombre', 'Administrador'))
+    @if(Auth::user()->roles->contains('name', 'Administrador') || Auth::user()->roles->contains('name', 'Pagos'))
+    <a
+      href="{{ route('pagos.index') }}"
+      class="sidebar-link {{ request()->routeIs('pagos.*') ? 'active' : '' }}"
+      role="menuitem"
+    >
+      <!-- Icono Pagos -->
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 5 17 10" />
+        <line x1="12" y1="5" x2="12" y2="19" />
+      </svg>
+      Pagos
+    </a>
+    @endif
+
+    @if(Auth::user()->roles->contains('name', 'Administrador'))
     <div class="sidebar-divider"></div>
     <div class="sidebar-section">Administración</div>
 

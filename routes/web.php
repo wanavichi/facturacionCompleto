@@ -29,10 +29,10 @@ Route::middleware(['auth:sanctum', 'rol:Cliente'])->group(function () {
 });
 
 // Rutas para Validador de pagos (panel web para revisar y aprobar/rechazar)
-Route::middleware(['auth', 'role:pagos'])->group(function () {
+Route::middleware(['auth', 'rol:Pagos'])->group(function () {
     Route::get('/pagos', [PagosController::class, 'index'])->name('pagos.index');
-    Route::post('/pagos/{id}/aprobar', [PagosController::class, 'aprobar'])->name('pagos.aprobar');
-    Route::post('/pagos/{id}/rechazar', [PagosController::class, 'rechazar'])->name('pagos.rechazar');
+    Route::post('/pagos/{id}/aprobar', [PagosController::class, 'approve'])->name('pagos.approve');
+    Route::post('/pagos/{id}/rechazar', [PagosController::class, 'reject'])->name('pagos.reject');
 });
 
 

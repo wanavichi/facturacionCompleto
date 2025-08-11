@@ -28,7 +28,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <p class="mb-1"><strong class="text-gray-700">Factura:</strong> #{{ $pago->factura_id }}</p>
-                    <p class="mb-1"><strong class="text-gray-700">Cliente:</strong> {{ $pago->pagador->nombre ?? 'N/A' }}</p>
+                    <p class="mb-1"><strong class="text-gray-700">Cliente:</strong> {{ $pago->pagador->name ?? 'N/A' }}</p>
                     <p class="mb-1"><strong class="text-gray-700">Monto:</strong> ${{ number_format($pago->monto, 2) }}</p>
                 </div>
                 <div>

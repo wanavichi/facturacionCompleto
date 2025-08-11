@@ -220,9 +220,13 @@
             <p><strong>Total:</strong> ${{ number_format($factura->total, 2) }}</p>
             <p>
                 <strong>Estado:</strong>
-                <span class="estado {{ $factura->anulada ? 'anulada' : '' }}">
-                    {{ $factura->anulada ? 'Anulada' : 'Válida' }}
-                </span>
+                @if($factura->anulada)
+                    <span class="estado anulada">Anulada</span>
+                @elseif($factura->pagada)
+                    <span class="estado">Pagada</span>
+                @else
+                    <span class="estado" style="color:#ca8a04">Pendiente</span>
+                @endif
             </p>
         </div>
 

@@ -26,7 +26,7 @@ use Laravel\Sanctum\HasApiTokens;
  */
 class Cliente extends Model
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes,HasApiTokens;
 
     protected $fillable = ['nombre', 'email', 'telefono', 'direccion', 'motivo_eliminacion'];
 

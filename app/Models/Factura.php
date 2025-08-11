@@ -36,7 +36,9 @@ class Factura extends Model
         'iva',
         'total',
         'anulada',
-        'pagada'
+        'pagada',
+        'estado',
+        'created_by',
     ];
 
     public function pagos()
