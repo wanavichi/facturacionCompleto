@@ -1,0 +1,164 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-8">
+    <h2 class="text-3xl font-semibold text-gray-800 mb-6">Listado de Facturas</h2>
+
+    <div class="flex justify-between items-center mb-6">
+        <a href="{{ route('dashboard') }}"
+            class="inline-flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-5 rounded transition">
+            {{-- Icono regresar --}}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            Regresar
+        </a>
+
+        <a href="{{ route('facturas.create') }}"
+            class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded transition">
+            Nueva Factura
+        </a>
+    </div>
+
+    @if(session('success'))
+        <div class="bg-green-100 text-green-800 p-4 rounded mb-6 shadow-sm flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="bg-red-100 text-red-800 p-4 rounded mb-6 shadow-sm flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            {{ $errors->first('msg') }}
+        </div>
+    @endif
+
+    <div class="bg-white shadow-md rounded-lg overflow-x-auto">
+        <table class="w-full table-auto text-sm text-gray-700">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="px-6 py-3 text-left font-medium">ID</th>
+                    <th class="px-6 py-3 text-left font-medium">Cliente</th>
+                    <th class="px-6 py-3 text-left font-medium">Total</th>
+                    <th class="px-6 py-3 text-left font-medium">Estado</th>
+                    <th class="px-6 py-3 text-left font-medium">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($facturas as $factura)
+                <tr class="border-b last:border-none {{ $factura->anulada ? 'bg-gray-50 text-gray-400' : '' }}">
+                    <td class="px-6 py-4">{{ $factura->id }}</td>
+                    <td class="px-6 py-4">{{ $factura->cliente->nombre }}</td>
+                    <td class="px-6 py-4">${{ number_format($factura->total, 2) }}</td>
+                    <td class="px-6 py-4">
+                        @if($factura->anulada)
+                            <span class="text-red-600 font-semibold">Anulada</span>
+                        @elseif($factura->estado === 'pagada')
+                            <span class="text-green-600 font-semibold">Pagada</span>
+                        @else
+                            <span class="text-yellow-600 font-semibold">Pendiente</span>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 space-x-4 whitespace-nowrap">
+                        {{-- Botón ver factura --}}
+                        <button onclick="openModal('verFactura-{{ $factura->id }}')" class="text-blue-600 hover:text-blue-800 font-semibold transition">Ver</button>
+
+                        {{-- Botón pagos --}}
+                        @if(!$factura->anulada)
+                            <button onclick="openModal('pagosFactura-{{ $factura->id }}')" class="text-indigo-600 hover:text-indigo-800 font-semibold transition">
+                                Pagos
+                            </button>
+                        @endif
+
+                        {{-- Botón anular --}}
+                        @if(!$factura->anulada && ($factura->user_id == $usuarioId || $roles->contains('Administrador')))
+                            <button onclick="openModal('anularFactura-{{ $factura->id }}')" class="text-red-600 hover:text-red-800 font-semibold transition">Anular</button>
+                        @endif
+
+                        {{-- Botón PDF --}}
+                        <a href="{{ route('facturas.pdf', $factura) }}" class="text-indigo-600 hover:text-indigo-800 font-semibold transition">PDF</a>
+
+                        {{-- Botón notificar --}}
+                        @if($factura->cliente->email_verified_at)
+                            <button onclick="openModal('notificarFactura-{{ $factura->id }}')" class="text-yellow-600 hover:text-yellow-800 font-semibold transition">Notificar</button>
+                        @else
+                            <span class="text-gray-400 italic">Correo no verificado</span>
+                        @endif
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    {{-- Modales --}}
+    @foreach($facturas as $factura)
+        {{-- Modal de pagos --}}
+        <div id="pagosFactura-{{ $factura->id }}" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+                <h3 class="text-xl font-bold mb-4 text-gray-800">Pagos de la Factura #{{ $factura->id }}</h3>
+                @if($factura->pagos->count())
+                    <table class="w-full text-sm text-gray-700 mb-4">
+                        <thead class="bg-gray-100 border-b">
+                            <tr>
+                                <th class="px-3 py-2">Tipo</th>
+                                <th class="px-3 py-2">Monto</th>
+                                <th class="px-3 py-2">Estado</th>
+                                <th class="px-3 py-2">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($factura->pagos as $pago)
+                                <tr class="border-b last:border-none">
+                                    <td class="px-3 py-2">{{ ucfirst($pago->tipo_pago) }}</td>
+                                    <td class="px-3 py-2">${{ number_format($pago->monto, 2) }}</td>
+                                    <td class="px-3 py-2">
+                                        @if($pago->estado === 'aprobado')
+                                            <span class="text-green-600 font-semibold">Aprobado</span>
+                                        @elseif($pago->estado === 'rechazado')
+                                            <span class="text-red-600 font-semibold">Rechazado</span>
+                                        @else
+                                            <span class="text-yellow-600 font-semibold">Pendiente</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        @role('pagos')
+                                            @if($pago->estado === 'pendiente')
+                                                <form action="{{ route('pagos.approve', $pago->id) }}" method="POST" class="inline">@csrf
+                                                    <button class="text-green-600 hover:text-green-800">Aprobar</button>
+                                                </form>
+                                                <form action="{{ route('pagos.reject', $pago->id) }}" method="POST" class="inline">@csrf
+                                                    <button class="text-red-600 hover:text-red-800">Rechazar</button>
+                                                </form>
+                                            @endif
+                                        @endrole
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <p class="text-gray-500">No hay pagos registrados para esta factura.</p>
+                @endif
+                <div class="mt-4 text-right">
+                    <button onclick="closeModal('pagosFactura-{{ $factura->id }}')" class="px-5 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
+<script>
+    function openModal(id) {
+        document.getElementById(id).classList.remove('hidden');
+    }
+    function closeModal(id) {
+        document.getElementById(id).classList.add('hidden');
+    }
+</script>
+@endsection
